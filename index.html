@@ -8,7 +8,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--b:#8E0000;--g:#c9a96e;--p:#f9f0f0;--bg:#FBEAEA;--d:#2c1a1a;--m:#5a3a3a}
-body{background:var(--bg);font-family:'Lato',sans-serif;min-height:100vh}
+body{background:var(--bg);font-family:'Lato',sans-serif;min-height:100vh;padding-bottom:70px}
 
 /* NAV */
 .nav{background:#8E0000;position:sticky;top:0;z-index:100;padding:0 1.5rem}
@@ -156,19 +156,38 @@ body{background:var(--bg);font-family:'Lato',sans-serif;min-height:100vh}
 </head>
 <body>
 
-<!-- NAV -->
-<nav class="nav">
-  <div class="nav-inner">
-    <span class="nav-brand" data-sec="inicio" onclick="showSec('inicio')">The Roman</span>
-    <div class="nav-links">
-      <button class="nav-btn active" data-sec="inicio" onclick="showSec('inicio')">Inicio</button>
-      <button class="nav-btn" data-sec="beneficios" onclick="showSec('beneficios')">Beneficios</button>
-      <button class="nav-btn" data-sec="como" onclick="showSec('como')">Cómo tomarlo</button>
-      <button class="nav-btn" data-sec="pago" onclick="showSec('pago')">Pago</button>
-      <button class="nav-btn" data-sec="fidelidad" onclick="showSec('fidelidad')">Fidelidad</button>
-      <button class="nav-btn" data-sec="contacto" onclick="showSec('contacto')">Contacto</button>
-    </div>
-  </div>
+<!-- TOP BAR -->
+<nav class="top-bar">
+  <span class="nav-brand" onclick="showSec('inicio')">The Roman</span>
+  <span style="font-size:11px;color:#c9a96e;letter-spacing:.15em;text-transform:uppercase">Kéfir Artesanal</span>
+</nav>
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav">
+  <button class="bnav-btn active" data-sec="inicio" onclick="showSec('inicio')">
+    <span class="bnav-icon">🏠</span>
+    <span class="bnav-label">Inicio</span>
+  </button>
+  <button class="bnav-btn" data-sec="beneficios" onclick="showSec('beneficios')">
+    <span class="bnav-icon">✨</span>
+    <span class="bnav-label">Beneficios</span>
+  </button>
+  <button class="bnav-btn" data-sec="como" onclick="showSec('como')">
+    <span class="bnav-icon">🌿</span>
+    <span class="bnav-label">Cómo tomarlo</span>
+  </button>
+  <button class="bnav-btn" data-sec="pago" onclick="showSec('pago')">
+    <span class="bnav-icon">💳</span>
+    <span class="bnav-label">Pago</span>
+  </button>
+  <button class="bnav-btn" data-sec="fidelidad" onclick="showSec('fidelidad')">
+    <span class="bnav-icon">🎀</span>
+    <span class="bnav-label">Fidelidad</span>
+  </button>
+  <button class="bnav-btn" data-sec="contacto" onclick="showSec('contacto')">
+    <span class="bnav-icon">📱</span>
+    <span class="bnav-label">Contacto</span>
+  </button>
 </nav>
 
 <!-- ══════════ INICIO ══════════ -->
@@ -407,10 +426,10 @@ body{background:var(--bg);font-family:'Lato',sans-serif;min-height:100vh}
 <script>
 window.showSec = function(id) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
   var sec = document.getElementById('sec-'+id);
   if(sec) sec.classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b => {
+  document.querySelectorAll('.bnav-btn').forEach(b => {
     if(b.getAttribute('data-sec') === id) b.classList.add('active');
   });
   window.scrollTo(0,0);
