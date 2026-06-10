@@ -418,6 +418,8 @@ window.doLogout = function() {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+// Make firebase available globally
+window._fbReady = false;
 
 const app = initializeApp({apiKey: "AIzaSyBe_NFVD9fg6RKVpEeFHUGGODV3wh38bf4",
     authDomain: "the-roman--kefir.firebaseapp.com",
@@ -447,37 +449,44 @@ function bowSVG(filled, special, size) {
 
 // CLIENT VIEW
 window.loadClientView = function(clientId) {
-  var ref = doc(db, 'clientes', clientId);
-  if(window._clientUnsub) window._clientUnsub();
-  window._clientUnsub = onSnapshot(ref, function(snap) {
-    var n = snap.exists() ? snap.data().sellos : 0;
-    var grid = document.getElementById('cv-stamps');
-    if(!grid) return;
-    var html = '';
-    for(var i=1;i<=10;i++) {
-      var sp = (i===5||i===10), fi = i<=n;
-      var lbl = i===5?'50%':i===10?'🎁':i;
-      html += '<div class="cv-stamp'+(fi?' filled':'')+(sp?' special':'')+'">'
-        +bowSVG(fi,sp,26)+'<span class="cv-snum">'+lbl+'</span></div>';
-    }
-    grid.innerHTML = html;
-    document.getElementById('cv-count').textContent = n;
-    document.getElementById('cv-prog').style.width = (n*10)+'%';
-  });
+  // Wait for DOM to be ready
+  setTimeout(function() {
+    var ref = doc(db, 'clientes', clientId);
+    if(window._clientUnsub) window._clientUnsub();
+    window._clientUnsub = onSnapshot(ref, function(snap) {
+      var n = snap.exists() ? (snap.data().sellos || 0) : 0;
+      var grid = document.getElementById('cv-stamps');
+      if(!grid) return;
+      var h = '';
+      for(var i=1;i<=10;i++) {
+        var sp = (i===5||i===10), fi = i<=n;
+        var lbl = i===5?'50%':i===10?'🎁':i;
+        h += '<div class="cv-stamp'+(fi?' filled':'')+(sp?' special':'')+'">'
+          +bowSVG(fi,sp,26)+'<span class="cv-snum">'+lbl+'</span></div>';
+      }
+      grid.innerHTML = h;
+      var countEl = document.getElementById('cv-count');
+      var progEl = document.getElementById('cv-prog');
+      if(countEl) countEl.textContent = n;
+      if(progEl) progEl.style.width = (n*10)+'%';
+    });
+  }, 200);
 };
 
 // ADMIN
 window.loadAdminCards = function() {
   var grid = document.getElementById('clients-grid');
+  if(!grid) { setTimeout(window.loadAdminCards, 300); return; }
   grid.innerHTML = '';
   CLIENTS.forEach(function(client) {
     var div = document.createElement('div');
     div.className = 'admin-card';
     div.id = 'ac-'+client.id;
     grid.appendChild(div);
+    renderAdminCard(client, 0); // render empty first
     var ref = doc(db, 'clientes', client.id);
     onSnapshot(ref, function(snap) {
-      var n = snap.exists() ? snap.data().sellos : 0;
+      var n = snap.exists() ? (snap.data().sellos || 0) : 0;
       renderAdminCard(client, n);
     });
   });
