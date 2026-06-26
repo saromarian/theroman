@@ -315,7 +315,7 @@
       <div class="price-hero-content">
         <p class="ph-tag">✦ Precios · The Roman</p>
         <h2 class="ph-title">Inversión en<br>tu bienestar</h2>
-        <p class="ph-sub">1 litro de kéfir artesanal · Playa del Carmen<br>Probióticos vivos · Sin conservadores 🌿</p>
+        <p class="ph-sub">1 litro de kéfir artesanal<br>Probióticos vivos · Sin conservadores 🌿</p>
       </div>
     </div>
 
@@ -650,17 +650,27 @@ function renderAdminCard(client, n) {
   var stamps = '';
   for(var i=1;i<=10;i++) {
     var sp=(i===5||i===10), fi=i<=n;
-    var lbl=i===5?'50%':i===10?'🎁':i;
-    var cid = client.id;
-    stamps += '<div class="adm-stamp'+(fi?' filled':'')+(sp?' special':'')+'" onclick="window.toggleStamp(''+cid+'','+i+')">'
-      +bowSVG(fi,sp,18)+'<span class="adm-snum">'+lbl+'</span></div>';
+    var lbl=i===5?'50%':i===10?'regalo':i;
+    var cls = 'adm-stamp' + (fi?' filled':'') + (sp?' special':'');
+    stamps += '<div class="'+cls+'" data-cid="'+client.id+'" data-i="'+i+'">'
+      + bowSVG(fi,sp,18)
+      + '<span class="adm-snum">'+lbl+'</span></div>';
   }
   div.innerHTML = '<div class="admin-header">'
     +'<span class="admin-name">'+client.name+'</span>'
     +'<span class="admin-count">'+n+' / 10</span></div>'
-    +'<div class="admin-stamps">'+stamps+'</div>'
+    +'<div class="admin-stamps" id="stamps-'+client.id+'">'+stamps+'</div>'
     +'<div class="adm-prog"><div class="adm-progfill" style="width:'+(n*10)+'%"></div></div>'
     +'<div class="adm-status" id="as-'+client.id+'"></div>';
+  // Add click listeners after innerHTML
+  var grid = document.getElementById('stamps-'+client.id);
+  if(grid) {
+    grid.querySelectorAll('.adm-stamp').forEach(function(el) {
+      el.addEventListener('click', function() {
+        window.toggleStamp(this.getAttribute('data-cid'), parseInt(this.getAttribute('data-i')));
+      });
+    });
+  }
 }
 
 window.toggleStamp = async function(clientId, i) {
