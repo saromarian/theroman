@@ -524,34 +524,39 @@ window.copyNum = function() {
   setTimeout(function() { btn.textContent = '📋 Copiar'; btn.classList.remove('copied'); }, 2000);
 };
 
-// FIDELIDAD
-var CLIENTS = [
-  {id:'andrea-maldonado', name:'Andrea Maldonado', keys:['andrea','andrea maldonado']},
-  {id:'royer-alexander', name:'Royer Alexander', keys:['royer','royer alexander']}
-];
-
+// FIDELIDAD — busca dinámicamente en Firebase
 window.doLogin = function() {
-  var input = document.getElementById('login-pass').value.trim().toLowerCase();
-  if(input === 'saroroman34') {
+  var input = document.getElementById('login-pass').value.trim();
+  var inputLower = input.toLowerCase();
+
+  // Admin
+  if(inputLower === 'saroroman34') {
     document.getElementById('login-view').style.display = 'none';
     document.getElementById('admin-view').style.display = 'block';
     document.getElementById('client-view').style.display = 'none';
-    if(window.loadAdminCards) window.loadAdminCards();
+    var tries = 0;
+    var wait = setInterval(function() {
+      tries++;
+      if(window.loadAdminCards) { clearInterval(wait); window.loadAdminCards(); }
+      else if(tries > 20) clearInterval(wait);
+    }, 150);
     return;
   }
-  var found = null;
-  CLIENTS.forEach(function(c) {
-    c.keys.forEach(function(k) { if(input === k) found = c; });
-  });
-  if(found) {
-    document.getElementById('login-view').style.display = 'none';
-    document.getElementById('admin-view').style.display = 'none';
-    document.getElementById('client-view').style.display = 'block';
-    document.getElementById('cv-name').textContent = found.name;
-    if(window.loadClientView) window.loadClientView(found.id);
-  } else {
-    document.getElementById('login-err').textContent = 'Nombre no encontrado. Escribe tu nombre completo.';
-  }
+
+  // Buscar cliente en Firebase
+  var errEl = document.getElementById('login-err');
+  errEl.textContent = 'Buscando...';
+  var tries2 = 0;
+  var wait2 = setInterval(function() {
+    tries2++;
+    if(window.searchClient) {
+      clearInterval(wait2);
+      window.searchClient(input);
+    } else if(tries2 > 20) {
+      clearInterval(wait2);
+      errEl.textContent = 'Error de conexión. Intenta de nuevo.';
+    }
+  }, 150);
 };
 
 window.doLogout = function() {
@@ -573,7 +578,7 @@ document.querySelectorAll('.bnav').forEach(function(btn) {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, onSnapshot, getDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyBe_NFVD9fg6RKVpEeFHUGGODV3wh38bf4",
@@ -601,6 +606,44 @@ function bowSVG(filled, special, size) {
     +'<line x1="22" y1="16" x2="28" y2="24" stroke="'+color+'" stroke-width="1"/>'
     +'</svg>';
 }
+
+// Search client by name dynamically
+window.searchClient = async function(inputName) {
+  var errEl = document.getElementById('login-err');
+  var inputLower = inputName.trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+
+  try {
+    var snap = await getDocs(collection(db, 'clientes'));
+    var found = null;
+    snap.forEach(function(docSnap) {
+      var data = docSnap.data();
+      var nombre = (data.nombre || docSnap.id);
+      var nombreLower = nombre.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      var docIdLower = docSnap.id.toLowerCase();
+      // Match by full name or first name
+      if(nombreLower === inputLower ||
+         docIdLower === inputLower.replace(/\s+/g,'-') ||
+         nombreLower.split(' ')[0] === inputLower) {
+        found = { id: docSnap.id, name: nombre };
+      }
+    });
+
+    if(found) {
+      document.getElementById('login-view').style.display = 'none';
+      document.getElementById('admin-view').style.display = 'none';
+      document.getElementById('client-view').style.display = 'block';
+      document.getElementById('cv-name').textContent = found.name;
+      window.loadClientView(found.id);
+      errEl.textContent = '';
+    } else {
+      errEl.textContent = 'Nombre no encontrado. Escribe tu nombre completo.';
+    }
+  } catch(e) {
+    errEl.textContent = 'Error de conexión. Intenta de nuevo.';
+  }
+};
 
 window.loadClientView = function(clientId) {
   setTimeout(function() {
