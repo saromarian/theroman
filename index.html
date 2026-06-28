@@ -610,23 +610,34 @@ function bowSVG(filled, special, size) {
 // Search client by name dynamically
 window.searchClient = async function(inputName) {
   var errEl = document.getElementById('login-err');
-  var inputLower = inputName.trim().toLowerCase()
+  var input = inputName.trim();
+  var inputLower = input.toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  // Convert to document ID format
+  var inputAsId = inputLower.replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
 
   try {
     var snap = await getDocs(collection(db, 'clientes'));
     var found = null;
     snap.forEach(function(docSnap) {
+      if(found) return;
       var data = docSnap.data();
-      var nombre = (data.nombre || docSnap.id);
+      var docId = docSnap.id.toLowerCase();
+      // nombre field (new clients from admin panel)
+      var nombre = data.nombre || '';
       var nombreLower = nombre.toLowerCase()
         .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-      var docIdLower = docSnap.id.toLowerCase();
-      // Match by full name or first name
+      // Match by: nombre field, doc ID, or first name only
       if(nombreLower === inputLower ||
-         docIdLower === inputLower.replace(/\s+/g,'-') ||
-         nombreLower.split(' ')[0] === inputLower) {
-        found = { id: docSnap.id, name: nombre };
+         docId === inputAsId ||
+         docId === inputLower ||
+         nombreLower.split(' ')[0] === inputLower ||
+         docId.split('-')[0] === inputLower) {
+        // Use nombre if available, otherwise format the doc ID
+        var displayName = nombre || docSnap.id.split('-').map(function(w){
+          return w.charAt(0).toUpperCase()+w.slice(1);
+        }).join(' ');
+        found = { id: docSnap.id, name: displayName };
       }
     });
 
